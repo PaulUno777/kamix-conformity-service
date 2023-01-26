@@ -88,7 +88,7 @@ export class ConformityHelper {
   }
 
   //generate excel file and return path
-  async generateFileSingle(data: any[]) {
+  async generateFileSingle(data: any[], body: FullName) {
     const workbook = new Workbook();
     workbook.creator = 'kamix-conformity-service';
     workbook.created = new Date();
@@ -109,12 +109,13 @@ export class ConformityHelper {
 
     sheet.addRows(data);
 
-    const fileName = `${data[0].firstName}-${data[0].lastName}.xlsx`;
+    const name = `${body.firstName}-${body.lastName}.xlsx`;
+    const fileName = name.replace(/\s/g,'');
     const pathToFile = 'public/' + fileName;
 
     await fs.unlink(pathToFile, function (err) {
       if (err) {
-        throw err;
+        console.log(err) ;
       } else {
         console.log('Successfully deleted the file.');
       }
@@ -131,40 +132,44 @@ export class ConformityHelper {
 
     await workbook.xlsx.writeFile('public/' + fileName);
 
-    console.log(workbook.created);
+    return fileName;
   }
 
   //clean data
   cleanDataSingle(table: any[]) {
     const cleanData = [];
     table.map((elt) => {
-      cleanData.push({
-        firstName: elt.firstName,
-        lastName: elt.lastName,
-        result: elt.results.metadata.message,
-        link: elt.results.resultUrl,
-        matchRate: elt.results.matchedEntities[0].matchRate + '%',
-      });
-      if (elt.results.matchedEntities.length > 0) {
-        for (let i = 0; i < elt.results.matchedEntities.length; i++) {
-          const firstName =
-            elt.results.matchedEntities[i].resultEntity.primaryFirstName;
-          const testmiddleName =
-            elt.results.matchedEntities[i].resultEntity.primaryMiddleName;
-          let middleName = '';
-          if (testmiddleName) middleName = testmiddleName;
-          const lastName =
-            elt.results.matchedEntities[i].resultEntity.primaryLastName;
-          const rate = elt.results.matchedEntities[i].matchRate + '%';
-          cleanData.push({
-            result: `${
-              i + 1
-            }. (${rate}) - ${firstName} ${middleName} ${lastName}`,
-            sanction: elt.results.matchedEntities[i].resultEntity.categories,
-            date: elt.results.matchedEntities[i].resultEntity.dateOfBirth,
-          });
+        if (elt.results.matchedEntities != null) {
+            cleanData.push({
+                firstName: elt.firstName,
+                lastName: elt.lastName,
+                result: elt.results.metadata.message,
+                link: elt.results.resultUrl,
+                matchRate: elt.results.matchedEntities[0].matchRate + '%',
+            });
+            for (let i = 0; i < elt.results.matchedEntities.length; i++) {
+                const firstName = elt.results.matchedEntities[i].resultEntity.primaryFirstName;
+                const testmiddleName =elt.results.matchedEntities[i].resultEntity.primaryMiddleName;
+                let middleName = '';
+                if (testmiddleName) middleName = testmiddleName;
+                const lastName = elt.results.matchedEntities[i].resultEntity.primaryLastName;
+                const rate = elt.results.matchedEntities[i].matchRate + '%';
+                cleanData.push({
+                    result: `${
+                    i + 1
+                    }. (${rate}) - ${firstName} ${middleName} ${lastName}`,
+                    sanction: elt.results.matchedEntities[i].resultEntity.categories,
+                    date: elt.results.matchedEntities[i].resultEntity.dateOfBirth,
+                });
+            }
         }
-      }
+        else{
+            cleanData.push({
+                firstName: elt.firstName,
+                lastName: elt.lastName,
+                result: elt.results.metadata.message,
+            });
+        }
     });
 
     return cleanData;

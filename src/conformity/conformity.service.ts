@@ -38,16 +38,23 @@ export class ConformityService {
         response.push(elt);
       }),
     );
+
+    //clean data for Excel file
+    const cleanData = await this.ConformityHelper.cleanDataSingle(response);
+    //Generate Excel File
+    const fileName = await this.ConformityHelper.generateFileSingle(cleanData, fullName);
     //return response
-    return { data: response, file: 'llhjfgfftfftnjb' };
-    //return this.ConformityHelper.generateFileSingle(new Array);
+    return {
+      data: response,
+      file: this.config.get('API_PUBLIC_URL') + fileName,
+    };
   }
   async test(data?: any) {
     const response = await this.SingleCheck(data);
     const cleanData = this.ConformityHelper.cleanDataSingle(response.data);
 
     console.log(cleanData);
-    this.ConformityHelper.generateFileSingle(cleanData);
+    //this.ConformityHelper.generateFileSingle(cleanData, fullName);
     //return this.ConformityHelper.generateFileSingle(new Array);
   }
 }

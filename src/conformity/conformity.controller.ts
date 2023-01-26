@@ -20,7 +20,7 @@ export class ConformityController {
     return this.conformityService.test(body);
   }
 
-  @ApiParam({name: 'file', required: true, description: 'tne name of file to daownload'})
+  @ApiParam({name: 'fileName', required: true, description: 'tne name of file to daownload'})
   @HttpCode(HttpStatus.OK)
   @Header('Content-Type', 'application/xlsx')
   @Get('download/:file')
