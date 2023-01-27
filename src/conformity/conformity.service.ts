@@ -1,8 +1,8 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NOTFOUND } from 'dns';
-import { NotFoundError } from 'rxjs';
+import * as fs from 'fs';
 import { ConformityHelper } from './conformity.helper';
 import { FullName } from './dto/fullName.dto';
 import { ResponseDto } from './dto/response.dto';
@@ -16,13 +16,13 @@ export class ConformityService {
     private readonly httpService: HttpService,
   ) {}
 
-  async SingleCheck(fullName: FullName): Promise<any> {
+  async sheckSingle(fullName: FullName): Promise<any> {
     //create an array that contains combinations of firstNames and lastNames
     const namesArray = this.ConformityHelper.createNamesArray(
       fullName.firstName,
       fullName.lastName,
     );
-    //add for my response
+    //my response
     let response = [];
     //request for each names combination
     await Promise.all(
@@ -49,12 +49,38 @@ export class ConformityService {
       file: this.config.get('API_PUBLIC_URL') + fileName,
     };
   }
-  async test(data?: any) {
-    const response = await this.SingleCheck(data);
-    const cleanData = this.ConformityHelper.cleanDataSingle(response.data);
+  async checkFile(fileName: any) {
+    //get data from Excel file
+    const data = await this.ConformityHelper.excelToArray(fileName); 
+    console.log(data);
+    //my response
+    let response = [];
+    //Make my request
+    await Promise.all(
+      data.map(async (elt: any) => {
+        const result = await this.ConformityHelper.toRequestMultiple(
+          elt,
+          this.httpService,
+          this.config,
+        );
+        if (!result) throw NOTFOUND;
+        console.log(result);
+        elt = new ResponseDto(elt.PRENOM, elt.NOM, result);
+        response.push(elt);
+      })
+    );
+    //delete the uploaded file
+    const pathToFile = 'public/' + fileName;
+    await fs.unlink(pathToFile, function (err) {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log('Successfully deleted the file.');
+      }
+    });
 
-    console.log(cleanData);
-    //this.ConformityHelper.generateFileSingle(cleanData, fullName);
-    //return this.ConformityHelper.generateFileSingle(new Array);
+    //write the result file
+
+    console.log(response);
   }
 }

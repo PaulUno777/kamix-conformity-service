@@ -6,7 +6,8 @@ import { catchError, firstValueFrom } from 'rxjs';
 import { FullName } from './dto/fullName.dto';
 import { InputBody } from './dto/inputbody.dto';
 import * as fs from 'fs';
-import * as path from 'path';
+import * as xlsx from 'xlsx';
+import { join } from 'path';
 
 export class ConformityHelper {
   private readonly logger = new Logger(ConformityHelper.name);
@@ -110,26 +111,16 @@ export class ConformityHelper {
     sheet.addRows(data);
 
     const name = `${body.firstName}-${body.lastName}.xlsx`;
-    const fileName = name.replace(/\s/g,'');
+    const fileName = name.replace(/\s/g, '');
     const pathToFile = 'public/' + fileName;
 
     await fs.unlink(pathToFile, function (err) {
       if (err) {
-        console.log(err) ;
+        console.log(err);
       } else {
         console.log('Successfully deleted the file.');
       }
     });
-    //"@nestjs/serve-static": "^3.0.0",
-    // await fs.readdir('public', (err, files) => {
-    //   if (err) throw err;
-    //   for (const file of files) {
-    //     fs.unlink(path.join('public', file), (err) => {
-    //       if (err) throw err;
-    //     });
-    //   }
-    // });
-
     await workbook.xlsx.writeFile('public/' + fileName);
 
     return fileName;
@@ -139,39 +130,89 @@ export class ConformityHelper {
   cleanDataSingle(table: any[]) {
     const cleanData = [];
     table.map((elt) => {
-        if (elt.results.matchedEntities != null) {
-            cleanData.push({
-                firstName: elt.firstName,
-                lastName: elt.lastName,
-                result: elt.results.metadata.message,
-                link: elt.results.resultUrl,
-                matchRate: elt.results.matchedEntities[0].matchRate + '%',
-            });
-            for (let i = 0; i < elt.results.matchedEntities.length; i++) {
-                const firstName = elt.results.matchedEntities[i].resultEntity.primaryFirstName;
-                const testmiddleName =elt.results.matchedEntities[i].resultEntity.primaryMiddleName;
-                let middleName = '';
-                if (testmiddleName) middleName = testmiddleName;
-                const lastName = elt.results.matchedEntities[i].resultEntity.primaryLastName;
-                const rate = elt.results.matchedEntities[i].matchRate + '%';
-                cleanData.push({
-                    result: `${
-                    i + 1
-                    }. (${rate}) - ${firstName} ${middleName} ${lastName}`,
-                    sanction: elt.results.matchedEntities[i].resultEntity.categories,
-                    date: elt.results.matchedEntities[i].resultEntity.dateOfBirth,
-                });
-            }
+      if (elt.results.matchedEntities != null) {
+        cleanData.push({
+          firstName: elt.firstName,
+          lastName: elt.lastName,
+          result: elt.results.metadata.message,
+          link: elt.results.resultUrl,
+          matchRate: elt.results.matchedEntities[0].matchRate + '%',
+        });
+        for (let i = 0; i < elt.results.matchedEntities.length; i++) {
+          const firstName =
+            elt.results.matchedEntities[i].resultEntity.primaryFirstName;
+          const testmiddleName =
+            elt.results.matchedEntities[i].resultEntity.primaryMiddleName;
+          let middleName = '';
+          if (testmiddleName) middleName = testmiddleName;
+          const lastName =
+            elt.results.matchedEntities[i].resultEntity.primaryLastName;
+          const rate = elt.results.matchedEntities[i].matchRate + '%';
+          cleanData.push({
+            result: `${
+              i + 1
+            }. (${rate}) - ${firstName} ${middleName} ${lastName}`,
+            sanction: elt.results.matchedEntities[i].resultEntity.categories,
+            date: elt.results.matchedEntities[i].resultEntity.dateOfBirth,
+          });
         }
-        else{
-            cleanData.push({
-                firstName: elt.firstName,
-                lastName: elt.lastName,
-                result: elt.results.metadata.message,
-            });
-        }
+      } else {
+        cleanData.push({
+          firstName: elt.firstName,
+          lastName: elt.lastName,
+          result: elt.results.metadata.message,
+        });
+      }
     });
 
     return cleanData;
+  }
+
+  async excelToArray(filename: string) {
+    const workbook = await xlsx.readFile(
+      join(process.cwd(), 'public/' + filename),
+    );
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    //transform data into arrays
+    const data = xlsx.utils.sheet_to_json(sheet);
+    //clean data
+    const cleanData = data.filter((value: any) =>{
+      if (value.NOM && value.PRENOM) {
+        return value;
+      }
+    })
+    //return data as arrays
+    return cleanData;
+  }
+
+  //send a Request to MemberCheck
+  async toRequestMultiple(
+    elt: any,
+    httpService: HttpService,
+    config: ConfigService,
+  ): Promise<{}> {
+  
+    const inputBody = new InputBody(elt.PRENOM, elt.NOM);
+    inputBody.memberNumber = elt.ID;
+    inputBody.clientId = elt.ID;
+
+    const { data } = await firstValueFrom(
+      httpService
+        .post('/member-scans/single', inputBody, {
+          baseURL: config.get('BASE_MC_URL'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Api-Key': config.get('API_KEY'),
+            'X-Request-OrgId': 'KMX',
+          },
+        })
+        .pipe(
+          catchError((error) => {
+            this.logger.error(error.response.data);
+            throw `An error happened! with:`;
+          }),
+        ),
+    );
+    return data;
   }
 }

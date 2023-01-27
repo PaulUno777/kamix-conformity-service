@@ -1,5 +1,3 @@
-import { randomUUID } from "crypto";
-
 export class InputBody {
     matchType: string;
     closeMatchRateThreshold: number;
@@ -11,13 +9,12 @@ export class InputBody {
     memberNumber: string;
     clientId: string;
     firstName: string;
-    middleName?: string;
     lastName: string;
     address: string;
     includeResultEntities: string;
     updateMonitoringList: string;
 
-    constructor(firstName: string, lastName: string) {
+    constructor(firstName?: string, lastName?: string) {
         this.matchType = "Close";
         this.closeMatchRateThreshold = 80;
         this.whitelist = "Apply";
@@ -28,11 +25,9 @@ export class InputBody {
         this.memberNumber = this.getMemberNumber();
         this.clientId = this.memberNumber;
         this.firstName = firstName;
-        // this.middleName = "";
         this.lastName = lastName;
         this.includeResultEntities = "Yes";
         this.updateMonitoringList = "ForceUpdate";
-
     }
 
     getMemberNumber() {
