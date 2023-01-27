@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import { ConformityHelper } from './conformity.helper';
 import { FullName } from './dto/fullName.dto';
 import { ResponseDto } from './dto/response.dto';
+import { ResponseFileDto } from './dto/response.file.dto';
 
 @Injectable()
 export class ConformityService {
@@ -52,7 +53,6 @@ export class ConformityService {
   async checkFile(fileName: any) {
     //get data from Excel file
     const data = await this.ConformityHelper.excelToArray(fileName); 
-    console.log(data);
     //my response
     let response = [];
     //Make my request
@@ -64,23 +64,22 @@ export class ConformityService {
           this.config,
         );
         if (!result) throw NOTFOUND;
-        console.log(result);
-        elt = new ResponseDto(elt.PRENOM, elt.NOM, result);
-        response.push(elt);
+        let date = 'no date';
+        if (elt.DNAISS) date = elt.DNAISS;
+        const row = new ResponseFileDto(elt.ID, elt.PRENOM, elt.NOM, date, result);
+        response.push(row);
+        console.log(row);
       })
     );
-    //delete the uploaded file
-    const pathToFile = 'public/' + fileName;
-    await fs.unlink(pathToFile, function (err) {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log('Successfully deleted the file.');
-      }
-    });
+
+    //clean data 
+    const cleanData =await this.ConformityHelper.cleanDataMultiple(response); 
 
     //write the result file
+    const resultFileName = await this.ConformityHelper.generateFileMultiple(cleanData, fileName);
 
-    console.log(response);
+    return {
+      resultFile: this.config.get('API_PUBLIC_URL') + resultFileName,
+    };
   }
 }

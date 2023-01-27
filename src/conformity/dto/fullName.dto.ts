@@ -1,8 +1,8 @@
-import { ApiHideProperty, ApiProperty } from "@nestjs/swagger";
+import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
 
 export class FullName {
-    @ApiProperty()
-    firstName: string;
-    @ApiProperty()
-    lastName: string;
+  @ApiProperty()
+  firstName: string;
+  @ApiProperty()
+  lastName: string;
 }

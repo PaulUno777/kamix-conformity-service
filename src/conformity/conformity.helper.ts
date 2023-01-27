@@ -8,6 +8,7 @@ import { InputBody } from './dto/inputbody.dto';
 import * as fs from 'fs';
 import * as xlsx from 'xlsx';
 import { join } from 'path';
+import { ResponseFileDto } from './dto/response.file.dto';
 
 export class ConformityHelper {
   private readonly logger = new Logger(ConformityHelper.name);
@@ -126,6 +127,54 @@ export class ConformityHelper {
     return fileName;
   }
 
+  //generate excel file and return path
+  async generateFileMultiple(data: any[], originalFileName: string) {
+    const workbook = new Workbook();
+    workbook.creator = 'kamix-conformity-service';
+    workbook.created = new Date();
+
+    const sheet = workbook.addWorksheet('Scan_result', {
+      headerFooter: { firstHeader: 'SCAN REPORT' },
+    });
+
+    sheet.columns = [
+      { header: 'ID', key: 'id', width: 10 },
+      { header: 'First Name', key: 'firstName', width: 24 },
+      { header: 'Last Name', key: 'lastName', width: 24 },
+      { header: 'Date Of Birth', key: 'dob', width: 10 },
+      { header: 'Results', key: 'result', width: 36 },
+      { header: 'Sanctions', key: 'sanction', width: 68 },
+      { header: 'Match (%)', key: 'matchRate', width: 15 },
+      { header: 'View Links', key: 'link', width: 46 },
+    ];
+
+    sheet.addRows(data);
+
+    const fileName = 'scan-results.xlsx';
+    const pathToFile = 'public/' + fileName;
+
+    await fs.unlink(pathToFile, function (err) {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log('Successfully deleted the file.');
+      }
+    });
+
+    await workbook.xlsx.writeFile(pathToFile);
+    //delete the uploaded file
+    const pathToOFile = 'public/' + originalFileName;
+    await fs.unlink(pathToOFile, function (err) {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log('Successfully deleted the file.');
+      }
+    });
+
+    return fileName;
+  }
+
   //clean data
   cleanDataSingle(table: any[]) {
     const cleanData = [];
@@ -167,7 +216,57 @@ export class ConformityHelper {
 
     return cleanData;
   }
+    //clean data
+  cleanDataMultiple(table: any[]) {
+    const cleanData = [];
+    table.map((elt) => {
+      if (elt instanceof ResponseFileDto && elt.results.matchedEntities != null) {
+        cleanData.push({
+          id: elt.id,
+          firstName: elt.firstName,
+          lastName: elt.lastName,
+          dob: elt.dateOfBirth,
+          result: elt.results.metadata.message,
+          link: elt.results.resultUrl,
+          matchRate: elt.results.matchedEntities[0].matchRate + '%',
+        });
+        for (let i = 0; i < elt.results.matchedEntities.length; i++) {
 
+          const firstName =
+            elt.results.matchedEntities[i].resultEntity.primaryFirstName;
+          const testmiddleName =
+            elt.results.matchedEntities[i].resultEntity.primaryMiddleName;
+          let middleName = '';
+          if (testmiddleName) middleName = testmiddleName;
+          const lastName =
+            elt.results.matchedEntities[i].resultEntity.primaryLastName;
+          const rate = elt.results.matchedEntities[i].matchRate + '%';
+          cleanData.push({
+            id: "----",
+            firstName: "----",
+            lastName: "----",
+            dob: "----",
+            result: `${
+              i + 1
+            }. (${rate}) - ${firstName} ${middleName} ${lastName}`,
+            sanction: elt.results.matchedEntities[i].resultEntity.categories,
+            link: "----",
+            matchRate: "----",
+          });
+        }
+      } else {
+        cleanData.push({
+          firstName: elt.firstName,
+          lastName: elt.lastName,
+          result: elt.results.metadata.message,
+        });
+      }
+    });
+
+    return cleanData;
+  }
+
+  //Read excel uploaded file and return their data as array of objects
   async excelToArray(filename: string) {
     const workbook = await xlsx.readFile(
       join(process.cwd(), 'public/' + filename),
@@ -215,4 +314,5 @@ export class ConformityHelper {
     );
     return data;
   }
+
 }
