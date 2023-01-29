@@ -107,9 +107,104 @@ export class ConformityHelper {
       { header: 'Dates Of Birth', key: 'date', width: 15 },
       { header: 'Match Rates (%)', key: 'matchRate', width: 15 },
       { header: 'View Links', key: 'link', width: 46 },
+      { header: 'Style', key: 'style', hidden: true },
     ];
 
+    sheet.getRow(1).font = {
+      name: 'Calibri',
+      family: 4,
+      size: 11,
+      bold: true,
+      color: { argb: 'ffffff' },
+    };
+    sheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: '3B4B41' },
+    };
+
     sheet.addRows(data);
+      //styling the worksheet
+      sheet.eachRow((row) => {
+        row.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' },
+        };
+        row.getCell('F').alignment = {
+          horizontal: 'right',
+        };
+        [ 'D', 'G'].map((key) => {
+          row.getCell(key).alignment = {
+            horizontal: 'justify',
+          };
+        });
+  
+        if (row.getCell('H').value == 0) {
+          ['C','D','E', 'F'].map((key) => {
+            row.getCell(key).fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'E2EFDA' },
+            };
+            row.getCell(key).font = {
+              color: { argb: '33B050' },
+            };
+          });
+          
+        }
+        if (row.getCell('H').value == 1) {
+          ['A', 'B', 'G'].map((key) => {
+            row.getCell(key).border = {
+              left: { style: 'thin' },
+              right: { style: 'thin' },
+              top: { style: 'thin' },
+              bottom: { style: 'thin', color: { argb: 'FFFFFF' } },
+            };
+          });
+          ['C','D','E', 'F'].map((key) => {
+            row.getCell(key).fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FCE4D6' },
+            };
+            row.getCell(key).font = {
+              color: { argb: 'FF0056' },
+            };
+            row.getCell(key).border = {
+              left: { style: 'thin' },
+              right: { style: 'thin' },
+              top: { style: 'thin' },
+              bottom: { style: 'thin', color: { argb: 'FCE4D6' } },
+            };
+          });
+        }
+        if (row.getCell('H').value == 3) {
+          ['A', 'B', 'G'].map((key) => {
+            row.getCell(key).border = {
+              left: { style: 'thin' },
+              right: { style: 'thin' },
+              top: { style: 'thin', color: { argb: 'FFFFFF' } },
+              bottom: { style: 'thin', color: { argb: 'FFFFFF' } },
+            };
+          });
+          ['C','D','E', 'F'].map((key) => {
+            row.getCell(key).fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FCE4D6' },
+            };
+            row.getCell(key).border = {
+              left: { style: 'thin' },
+              right: { style: 'thin' },
+              top: { style: 'thin', color: { argb: 'FCE4D6' } },
+              bottom: { style: 'thin', color: { argb: 'FCE4D6' } },
+            };
+          });
+        }
+        row.commit();
+      });
 
     const name = `${body.firstName}-${body.lastName}.xlsx`;
     const fileName = name.replace(/\s/g, '');
@@ -141,15 +236,119 @@ export class ConformityHelper {
       { header: 'ID', key: 'id', width: 10 },
       { header: 'First Name', key: 'firstName', width: 24 },
       { header: 'Last Name', key: 'lastName', width: 24 },
-      { header: 'Date Of Birth', key: 'dob', width: 10 },
-      { header: 'Results', key: 'result', width: 36 },
-      { header: 'Sanctions', key: 'sanction', width: 68 },
+      { header: 'Date Of Birth', key: 'dob', width: 12 },
+      { header: 'Results', key: 'result', width: 36, outlineLevel: 2 },
+      {
+        header: 'Sanctions',
+        key: 'sanction',
+        width: 75,
+        alignment: {
+          horizontal: 'fill',
+          vertical: 'justify',
+        },
+      },
       { header: 'Match (%)', key: 'matchRate', width: 15 },
       { header: 'View Links', key: 'link', width: 46 },
+      { header: 'Style', key: 'style', hidden: true },
     ];
 
-    sheet.addRows(data);
+    sheet.getRow(1).font = {
+      name: 'Calibri',
+      family: 4,
+      size: 11,
+      bold: true,
+      color: { argb: 'ffffff' },
+    };
+    sheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: '3B4B41' },
+    };
 
+    await sheet.addRows(data);
+
+    //styling the worksheet
+    sheet.eachRow((row) => {
+      row.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' },
+      };
+      row.getCell('G').alignment = {
+        horizontal: 'right',
+      };
+      [ 'F', 'H'].map((key) => {
+        row.getCell(key).alignment = {
+          horizontal: 'fill',
+        };
+      });
+
+      if (row.getCell('I').value == 0) {
+        ['E', 'F', 'G'].map((key) => {
+          row.getCell(key).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'E2EFDA' },
+          };
+          row.getCell(key).font = {
+            color: { argb: '33B050' },
+          };
+        });
+        
+      }
+      if (row.getCell('I').value == 1) {
+        ['A', 'B', 'C', 'D', 'H'].map((key) => {
+          row.getCell(key).border = {
+            left: { style: 'thin' },
+            right: { style: 'thin' },
+            top: { style: 'thin' },
+            bottom: { style: 'thin', color: { argb: 'FFFFFF' } },
+          };
+        });
+        ['E', 'F', 'G'].map((key) => {
+          row.getCell(key).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FCE4D6' },
+          };
+          row.getCell(key).font = {
+            color: { argb: 'FF0056' },
+          };
+          row.getCell(key).border = {
+            left: { style: 'thin' },
+            right: { style: 'thin' },
+            top: { style: 'thin' },
+            bottom: { style: 'thin', color: { argb: 'FCE4D6' } },
+          };
+        });
+      }
+      if (row.getCell('I').value == 3) {
+        ['A', 'B', 'C', 'D', 'H'].map((key) => {
+          row.getCell(key).border = {
+            left: { style: 'thin' },
+            right: { style: 'thin' },
+            top: { style: 'thin', color: { argb: 'FFFFFF' } },
+            bottom: { style: 'thin', color: { argb: 'FFFFFF' } },
+          };
+        });
+        ['E', 'F', 'G'].map((key) => {
+          row.getCell(key).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FCE4D6' },
+          };
+          row.getCell(key).border = {
+            left: { style: 'thin' },
+            right: { style: 'thin' },
+            top: { style: 'thin', color: { argb: 'FCE4D6' } },
+            bottom: { style: 'thin', color: { argb: 'FCE4D6' } },
+          };
+        });
+      }
+      row.commit();
+    });
+    // write the file
     const fileName = 'scan-results.xlsx';
     const pathToFile = 'public/' + fileName;
 
@@ -181,6 +380,7 @@ export class ConformityHelper {
     table.map((elt) => {
       if (elt.results.matchedEntities != null) {
         cleanData.push({
+          style: 1,
           firstName: elt.firstName,
           lastName: elt.lastName,
           result: elt.results.metadata.message,
@@ -198,6 +398,7 @@ export class ConformityHelper {
             elt.results.matchedEntities[i].resultEntity.primaryLastName;
           const rate = elt.results.matchedEntities[i].matchRate + '%';
           cleanData.push({
+            style: 3,
             result: `${
               i + 1
             }. (${rate}) - ${firstName} ${middleName} ${lastName}`,
@@ -207,6 +408,7 @@ export class ConformityHelper {
         }
       } else {
         cleanData.push({
+          style: 0,
           firstName: elt.firstName,
           lastName: elt.lastName,
           result: elt.results.metadata.message,
@@ -216,12 +418,16 @@ export class ConformityHelper {
 
     return cleanData;
   }
-    //clean data
+  //clean data
   cleanDataMultiple(table: any[]) {
     const cleanData = [];
     table.map((elt) => {
-      if (elt instanceof ResponseFileDto && elt.results.matchedEntities != null) {
+      if (
+        elt instanceof ResponseFileDto &&
+        elt.results.matchedEntities != null
+      ) {
         cleanData.push({
+          style: 1,
           id: elt.id,
           firstName: elt.firstName,
           lastName: elt.lastName,
@@ -231,7 +437,6 @@ export class ConformityHelper {
           matchRate: elt.results.matchedEntities[0].matchRate + '%',
         });
         for (let i = 0; i < elt.results.matchedEntities.length; i++) {
-
           const firstName =
             elt.results.matchedEntities[i].resultEntity.primaryFirstName;
           const testmiddleName =
@@ -242,23 +447,21 @@ export class ConformityHelper {
             elt.results.matchedEntities[i].resultEntity.primaryLastName;
           const rate = elt.results.matchedEntities[i].matchRate + '%';
           cleanData.push({
-            id: "----",
-            firstName: "----",
-            lastName: "----",
-            dob: "----",
+            style: 3,
             result: `${
               i + 1
             }. (${rate}) - ${firstName} ${middleName} ${lastName}`,
             sanction: elt.results.matchedEntities[i].resultEntity.categories,
-            link: "----",
-            matchRate: "----",
           });
         }
       } else {
         cleanData.push({
+          style: 0,
+          id: elt.id,
           firstName: elt.firstName,
           lastName: elt.lastName,
           result: elt.results.metadata.message,
+          matchRate: '0.0%',
         });
       }
     });
@@ -275,11 +478,11 @@ export class ConformityHelper {
     //transform data into arrays
     const data = xlsx.utils.sheet_to_json(sheet);
     //clean data
-    const cleanData = data.filter((value: any) =>{
+    const cleanData = data.filter((value: any) => {
       if (value.NOM && value.PRENOM) {
         return value;
       }
-    })
+    });
     //return data as arrays
     return cleanData;
   }
@@ -290,7 +493,6 @@ export class ConformityHelper {
     httpService: HttpService,
     config: ConfigService,
   ): Promise<{}> {
-  
     const inputBody = new InputBody(elt.PRENOM, elt.NOM);
     inputBody.memberNumber = elt.ID;
     inputBody.clientId = elt.ID;
@@ -314,5 +516,4 @@ export class ConformityHelper {
     );
     return data;
   }
-
 }

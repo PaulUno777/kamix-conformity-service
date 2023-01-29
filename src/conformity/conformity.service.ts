@@ -39,7 +39,6 @@ export class ConformityService {
         response.push(elt);
       }),
     );
-
     //clean data for Excel file
     const cleanData = await this.ConformityHelper.cleanDataSingle(response);
     //Generate Excel File
