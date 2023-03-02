@@ -3,9 +3,9 @@ import { ApiExcludeController } from '@nestjs/swagger';
 
 @ApiExcludeController()
 @Controller()
-export class AppController { 
+export class AppController {
   @Get()
   getHello() {
-    return { message : 'Welcome to Kamix API!'};
+    return { message: 'Welcome to Kamix MemberCheck API!' };
   }
 }

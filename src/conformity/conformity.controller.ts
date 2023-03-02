@@ -13,7 +13,13 @@ import {
   Req,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes, ApiExcludeEndpoint, ApiParam, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiExcludeEndpoint,
+  ApiParam,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { Response } from 'express';
 import { createReadStream } from 'fs';
 import { diskStorage } from 'multer';
@@ -43,8 +49,11 @@ export class ConformityController {
       },
     },
   })
-  @ApiResponse({ status: 201, description: 'Data on Excel file had been successfully scanned.'})
-  @ApiResponse({ status: 500, description: 'Internal servel Error.'})
+  @ApiResponse({
+    status: 201,
+    description: 'Data on Excel file had been successfully scanned.',
+  })
+  @ApiResponse({ status: 500, description: 'Internal servel Error.' })
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -54,13 +63,13 @@ export class ConformityController {
           const fileName = basename(file.originalname).replace(/\s/g, '');
           //Calling the callback passing the name with the original extension name
           cb(null, `${fileName}`);
-        }
-      })
-    }))
+        },
+      }),
+    }),
+  )
   async checkFile(@UploadedFile('file') file) {
     return await this.conformityService.checkFile(file.filename);
   }
-
 
   @ApiExcludeEndpoint()
   @ApiParam({

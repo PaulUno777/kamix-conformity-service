@@ -1,7 +1,7 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { NOTFOUND } from 'dns';
+import { NOTFOUND, SERVFAIL } from 'dns';
 import * as fs from 'fs';
 import { ConformityHelper } from './conformity.helper';
 import { FullName } from './dto/fullName.dto';
@@ -24,7 +24,7 @@ export class ConformityService {
       fullName.lastName,
     );
     //my response
-    let response = [];
+    const response = [];
     //request for each names combination
     await Promise.all(
       namesArray.map(async (name) => {
@@ -42,7 +42,10 @@ export class ConformityService {
     //clean data for Excel file
     const cleanData = await this.ConformityHelper.cleanDataSingle(response);
     //Generate Excel File
-    const fileName = await this.ConformityHelper.generateFileSingle(cleanData, fullName);
+    const fileName = await this.ConformityHelper.generateFileSingle(
+      cleanData,
+      fullName,
+    );
     //return response
     return {
       data: response,
@@ -51,31 +54,72 @@ export class ConformityService {
   }
   async checkFile(fileName: any) {
     //get data from Excel file
-    const data = await this.ConformityHelper.excelToArray(fileName); 
+    const data = await this.ConformityHelper.excelToArray(fileName);
     //my response
-    let response = [];
+    const response = [];
+    let date = 'NULL';
     //Make my request
     await Promise.all(
       data.map(async (elt: any) => {
+        //request body
+        const scanInputParam = {
+          matchType: 'Close',
+          closeMatchRateThreshold: 80,
+          whitelist: 'Apply',
+          residence: 'Ignore',
+          blankAddress: 'ApplyResidenceCountry',
+          pepJurisdiction: 'Apply',
+          excludeDeceasedPersons: 'no',
+          memberNumber: '',
+          clientId: '',
+          includeResultEntities: 'Yes',
+          updateMonitoringList: 'no',
+          includeWebSearch: 'No',
+        };
+        //set IDs
+        scanInputParam.memberNumber = elt.ID;
+        scanInputParam.clientId = elt.ID;
+        //Include FirstName and LastName if they two exist
+        if (elt.PRENOM && elt.NOM) {
+          scanInputParam['firstName'] = elt.PRENOM;
+          scanInputParam['lastName'] = elt.NOM;
+        } else {
+          if (elt.PRENOM) scanInputParam['scriptNameFullName'] = elt.PRENOM;
+          if (elt.NOM) scanInputParam['scriptNameFullName'] = elt.NOM;
+        }
+        if (elt.DNAISS) {
+          scanInputParam['dob'] = elt.DNAISS;
+          date = elt.DNAISS;
+        }
+
+        console.log(scanInputParam);
+        //make request to membercheck
         const result = await this.ConformityHelper.toRequestMultiple(
-          elt,
+          scanInputParam,
           this.httpService,
           this.config,
         );
-        if (!result) throw NOTFOUND;
-        let date = 'no date';
         if (elt.DNAISS) date = elt.DNAISS;
-        const row = new ResponseFileDto(elt.ID, elt.PRENOM, elt.NOM, date, result);
+        const row = new ResponseFileDto(
+          elt.ID,
+          elt.PRENOM,
+          elt.NOM,
+          date,
+          result,
+        );
         response.push(row);
-        console.log(row);
-      })
+      }),
     );
 
-    //clean data 
-    const cleanData =await this.ConformityHelper.cleanDataMultiple(response); 
+    response.sort((a, b) => (a.id > b.id ? 1 : b.id > a.id ? -1 : 0));
+    //clean data
+    const cleanData = await this.ConformityHelper.cleanDataMultiple(response);
 
     //write the result file
-    const resultFileName = await this.ConformityHelper.generateFileMultiple(cleanData, fileName);
+    const resultFileName = await this.ConformityHelper.generateFileMultiple(
+      cleanData,
+      fileName,
+    );
 
     return {
       resultFile: this.config.get('API_PUBLIC_URL') + resultFileName,
