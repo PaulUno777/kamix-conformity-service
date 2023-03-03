@@ -29,7 +29,7 @@ echo UPLOAD_LOCATION=${UPLOAD_LOCATION} >> .env;'''
       parallel {
         stage('Build app') {
           steps {
-            sh 'docker build -t unoteck/kamix-sanction-service .'
+            sh 'docker build -t unoteck/kamix-membercheck-service .'
           }
         }
 
