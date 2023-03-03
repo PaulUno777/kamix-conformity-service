@@ -35,8 +35,8 @@ echo UPLOAD_LOCATION=${UPLOAD_LOCATION} >> .env;'''
 
         stage('Log into Dockerhub') {
           environment {
-            DOCKER_USER = '\'unoteck\''
-            DOCKER_PASSWORD = '\'David.lock#2023\''
+            DOCKER_USER = 'unoteck'
+            DOCKER_PASSWORD = 'David.lock#2023'
           }
           steps {
             sh 'docker login -u $DOCKER_USER -p $DOCKER_PASSWORD'
@@ -54,8 +54,14 @@ echo UPLOAD_LOCATION=${UPLOAD_LOCATION} >> .env;'''
 
     stage('Start app') {
       steps {
-        sh 'docker rm --force --volumes kamix-sanction-service'
+        sh 'docker rm --force --volumes kamix-membercheck-service'
         sh 'docker compose up'
+      }
+    }
+
+    stage('Get app logs') {
+      steps {
+        sh 'docker container logs kamix-membercheck-service'
       }
     }
 
