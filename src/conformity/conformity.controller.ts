@@ -31,7 +31,7 @@ import { FullName } from './dto/fullName.dto';
 export class ConformityController {
   constructor(private readonly conformityService: ConformityService) {}
 
-  @Post('check')
+  @Post('check/single')
   checkSingle(@Body() body: FullName) {
     return this.conformityService.sheckSingle(body);
   }

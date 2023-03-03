@@ -1,0 +1,10 @@
+version: "3"
+services:
+  server:
+    container_name: kamix-membercheck-service
+    image: unoteck/kamix-membercheck-service
+    env_file:
+      - .env
+    ports:
+      - 3800:3000
+      - 5800:3000

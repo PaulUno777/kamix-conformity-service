@@ -208,7 +208,11 @@ export class ConformityHelper {
 
     const name = `${body.firstName}-${body.lastName}.xlsx`;
     const fileName = name.replace(/\s/g, '');
-    const pathToFile = 'public/' + fileName;
+    const pathToFile = './public/' + fileName;
+
+    if (!fs.existsSync('./public/')) {
+      fs.mkdirSync('./public/');
+    }
 
     await fs.unlink(pathToFile, function (err) {
       if (err) {
@@ -238,7 +242,7 @@ export class ConformityHelper {
       { header: 'Last Name', key: 'lastName', width: 24 },
       { header: 'Date Of Birth', key: 'dob', width: 12 },
       { header: 'Results', key: 'result', width: 36, outlineLevel: 2 },
-      { header: 'Sanctions', key: 'sanction', width: 70},
+      { header: 'Sanctions', key: 'sanction', width: 70 },
       { header: 'Match (%)', key: 'matchRate', width: 15 },
       { header: 'View Links', key: 'link', width: 46 },
       { header: 'Style', key: 'style', hidden: true },
@@ -312,11 +316,11 @@ export class ConformityHelper {
             bottom: { style: 'thin', color: { argb: 'FFFFFF' } },
           };
         });
-		
-		row.getCell('F').alignment = {
-			horizontal: 'distributed',
-		};
-			 
+
+        row.getCell('F').alignment = {
+          horizontal: 'distributed',
+        };
+
         ['E', 'F', 'G'].map((key) => {
           row.getCell(key).fill = {
             type: 'pattern',
@@ -335,12 +339,16 @@ export class ConformityHelper {
     });
     // write the file
     const fileName = 'scan-results.xlsx';
-	const publicDir = './public/';
+    const publicDir = './public/';
     const pathToFile = publicDir + fileName;
 
-	if (!fs.existsSync(publicDir)) {
-		fs.mkdirSync(publicDir);
-	  }
+    if (!fs.existsSync('./public/')) {
+      fs.mkdirSync('./public/');
+    }
+
+    if (!fs.existsSync(publicDir)) {
+      fs.mkdirSync(publicDir);
+    }
 
     await fs.unlink(pathToFile, function (err) {
       if (err) {
@@ -457,44 +465,49 @@ export class ConformityHelper {
       }
     });
 
-	//cleanData.sort((a, b) => (a.id > b.id) ? 1 : ((b.id > a.id) ? -1 : 0))
+    //cleanData.sort((a, b) => (a.id > b.id) ? 1 : ((b.id > a.id) ? -1 : 0))
 
     return cleanData;
   }
 
   //Read excel uploaded file and return their data as array of objects
   excelToArray(filename: string) {
-    const workbook = xlsx.readFile(
-      join(process.cwd(), 'public/' + filename),
-    );
+    const workbook = xlsx.readFile(join(process.cwd(), 'public/' + filename));
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     //transform data into arrays
     const data = xlsx.utils.sheet_to_json(sheet);
-    const regExp = /[0-9]{3}/
+    const regExp = /[0-9]{3}/;
 
-     //clean data
-    const cleanData = data.map((value: any) =>{
+    //clean data
+    const cleanData = data.map((value: any) => {
       const cleaned = value;
-      if(value.DNAISS) cleaned.DNAISS = this.formatDate(value.DNAISS)
+      if (value.DNAISS) cleaned.DNAISS = this.formatDate(value.DNAISS);
 
-
-      if(value.NOM){
-        cleaned.NOM = String(value.NOM).replace(/[^a-zA-Z0-9-_ ]/g, "");
-        if (regExp.test(value.NOM) || value.NOM.length > 35 || value.NOM.length < 4){
+      if (value.NOM) {
+        cleaned.NOM = String(value.NOM).replace(/[^a-zA-Z0-9-_ ]/g, '');
+        if (
+          regExp.test(value.NOM) ||
+          value.NOM.length > 35 ||
+          value.NOM.length < 4
+        ) {
           delete cleaned.NOM;
         }
       }
-      if(value.PRENOM){
-        cleaned.PRENOM = String(value.PRENOM).replace(/[^a-zA-Z0-9-_ ]/g, "");
-        if (regExp.test(value.PRENOM) || value.PRENOM.length > 35 || value.PRENOM.length < 4){
+      if (value.PRENOM) {
+        cleaned.PRENOM = String(value.PRENOM).replace(/[^a-zA-Z0-9-_ ]/g, '');
+        if (
+          regExp.test(value.PRENOM) ||
+          value.PRENOM.length > 35 ||
+          value.PRENOM.length < 4
+        ) {
           delete cleaned.PRENOM;
         }
       }
-      return cleaned; 
-    })
+      return cleaned;
+    });
 
     const filterData = cleanData.filter((value: any) => {
-        return value.PRENOM || value.NOM;
+      return value.PRENOM || value.NOM;
     });
 
     //return data as arrays
@@ -515,7 +528,7 @@ export class ConformityHelper {
             'Content-Type': 'application/json',
             'Api-Key': config.get('API_KEY'),
             'X-Request-OrgId': 'KMX',
-          },    //log.debug(scanInputParam);
+          }, //log.debug(scanInputParam);
         })
         .pipe(
           catchError((error) => {
@@ -523,7 +536,6 @@ export class ConformityHelper {
             console.log(`id --->${body.id}`);
             throw error;
           }),
-          
         ),
     );
     return data;
@@ -531,32 +543,40 @@ export class ConformityHelper {
 
   formatDate(date: string): string {
     if (date.length <= 4) {
-      return date
+      return date;
     }
-    if (date.includes('/') || date.includes('-')) {  
+    if (date.includes('/') || date.includes('-')) {
       const reg = /[-/\\]/;
       const tempDate = date.split(reg);
 
       if (date.length <= 7) {
         if (tempDate[0].length < 3) {
-          return tempDate[1]
+          return tempDate[1];
         } else {
-          return tempDate[0]
+          return tempDate[0];
         }
       } else {
         if (tempDate[0].length < 3) {
-          if(Number(tempDate[0]) <= 28 && Number(tempDate[1]) <= 12 && Number(tempDate[1]) > 0 && Number(tempDate[2]) >= 1900) {
+          if (
+            Number(tempDate[0]) <= 28 &&
+            Number(tempDate[1]) <= 12 &&
+            Number(tempDate[1]) > 0 &&
+            Number(tempDate[2]) >= 1900
+          ) {
             return `${tempDate[0]}/${tempDate[1]}/${tempDate[2]}`;
-          }else{
-            return tempDate[2]
+          } else {
+            return tempDate[2];
           }
         } else {
-          if(Number(tempDate[0]) <= 28 && Number(tempDate[1]) <= 12 && Number(tempDate[1]) > 0){
+          if (
+            Number(tempDate[0]) <= 28 &&
+            Number(tempDate[1]) <= 12 &&
+            Number(tempDate[1]) > 0
+          ) {
             return `${tempDate[2]}/${tempDate[1]}/${tempDate[0]}`;
-          }else{
-            return tempDate[0]
+          } else {
+            return tempDate[0];
           }
-          
         }
       }
     }

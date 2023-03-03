@@ -1,8 +1,7 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { NOTFOUND, SERVFAIL } from 'dns';
-import * as fs from 'fs';
+import { NOTFOUND } from 'dns';
 import { ConformityHelper } from './conformity.helper';
 import { FullName } from './dto/fullName.dto';
 import { ResponseDto } from './dto/response.dto';
@@ -35,6 +34,7 @@ export class ConformityService {
         );
         let elt;
         if (!result) throw NOTFOUND;
+        // eslint-disable-next-line prefer-const
         elt = new ResponseDto(name.firstName, name.lastName, result);
         response.push(elt);
       }),
