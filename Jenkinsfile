@@ -55,7 +55,7 @@ echo UPLOAD_LOCATION=${UPLOAD_LOCATION} >> .env;'''
     stage('Start app') {
       steps {
         sh 'docker rm --force --volumes kamix-membercheck-service'
-        sh 'docker compose up'
+        sh 'docker compose up --wait'
       }
     }
 
